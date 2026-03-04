@@ -220,28 +220,42 @@ function _toast(msg,type,ms) {
 
 // ── Enviar ───────────────────────────────────────────────────
 function enviar() {
-  var fecha=document.getElementById("fecha").value;
-  if(!fecha)   {_toast("Por favor selecciona la fecha.","err"); return;}
-  if(_empty()) {_toast("Por favor dibuja tu firma.","err");     return;}
-  var btn=document.getElementById("enviar-btn");
-  btn.disabled=true; btn.textContent="⏳ Capturando...";
-  var fecFmt=new Date(fecha+"T00:00:00").toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit",year:"numeric"});
-  html2canvas(document.getElementById("ficha-page"),{scale:2,useCORS:true,allowTaint:true,backgroundColor:"#ffffff"}).then(function(HQ){
-    btn.textContent="⏳ Subiendo imagen...";
-    var hqB64=HQ.toDataURL("image/jpeg",0.92).split(",")[1];
-    fetch("https://api.imgur.com/3/image",{method:"POST",headers:{"Authorization":"Client-ID 546c25a59c58ad7","Content-Type":"application/json"},body:JSON.stringify({image:hqB64,type:"base64"})}).then(function(r){return r.json();}).then(function(j){
-      var lnk=(j.success&&j.data&&j.data.link)?j.data.link:null;
-      btn.textContent="⏳ Enviando correo...";
-      function compress(cv,q){var d=cv.toDataURL("image/jpeg",q);if(d.length<=45000||q<=0.15)return d;var c2=document.createElement("canvas");c2.width=Math.round(cv.width*0.8);c2.height=Math.round(cv.height*0.8);c2.getContext("2d").drawImage(cv,0,0,c2.width,c2.height);return compress(c2,q-0.1);}
-      var lq=document.createElement("canvas");lq.width=Math.round(HQ.width*0.4);lq.height=Math.round(HQ.height*0.4);lq.getContext("2d").drawImage(HQ,0,0,lq.width,lq.height);
-      var small=compress(lq,0.75);
-      var fHtml=lnk?"<p><a href='"+lnk+"' style='color:#8C221B;font-weight:bold;'>Ver ficha firmada en alta calidad &rarr;</a></p>":"<p>Ver imagen adjunta.</p>";
-      emailjs.send(EJ_SERVICE,EJ_TEMPLATE,{to_email:RETORNO,cc_email:"mangelesrm@maffinter.com",subject:ASUNTO,fecha:fecFmt,firma_img:small,ficha_html:fHtml,message:"El cirujano ha firmado el plan quirúrgico 3D el "+fecFmt+"."}).then(function(){
-        btn.disabled=false;btn.textContent="✅ ¡Enviado!";
-        _toast("✅ Aprobación enviada a "+RETORNO,"ok",5000);
-      },function(err){btn.disabled=false;btn.textContent="✉ Enviar Aprobación";_toast("Error: "+JSON.stringify(err),"err",6000);});
-    }).catch(function(){btn.disabled=false;btn.textContent="✉ Enviar Aprobación";_toast("Error Imgur","err",5000);});
-  }).catch(function(err){btn.disabled=false;btn.textContent="✉ Enviar Aprobación";_toast("Error captura: "+err.message,"err",5000);});
+  var fecha=document.getElementById('fecha').value;
+  if(!fecha)   {_toast('Por favor selecciona la fecha.','err'); return;}
+  if(_empty()) {_toast('Por favor dibuja tu firma.','err');     return;}
+  var btn=document.getElementById('enviar-btn');
+  btn.disabled=true; btn.textContent='⏳ Capturando...';
+  var fecFmt=new Date(fecha+'T00:00:00').toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});
+  html2canvas(document.getElementById('ficha-page'),{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff'}).then(function(HQ){
+    btn.textContent='⏳ Preparando correo...';
+    // Compress to fit EmailJS 50KB limit while maximizing quality
+    function compress(cv,q){
+      var d=cv.toDataURL('image/jpeg',q);
+      if(d.length<=45000||q<=0.15)return d;
+      var c2=document.createElement('canvas');
+      c2.width=Math.round(cv.width*0.85);c2.height=Math.round(cv.height*0.85);
+      c2.getContext('2d').drawImage(cv,0,0,c2.width,c2.height);
+      return compress(c2,q);
+    }
+    var img=compress(HQ,0.85);
+    btn.textContent='⏳ Enviando correo...';
+    emailjs.send(EJ_SERVICE,EJ_TEMPLATE,{
+      to_email:RETORNO,cc_email:'mangelesrm@maffinter.com',
+      subject:ASUNTO,fecha:fecFmt,
+      firma_img:img,
+      ficha_html:'<p style="color:#64748b;font-size:12px;">Documento firmado adjunto como imagen.</p>',
+      message:'El cirujano ha firmado el plan quirúrgico 3D el '+fecFmt+'.'
+    }).then(function(){
+      btn.disabled=false;btn.textContent='✅ ¡Enviado!';
+      _toast('✅ Aprobación enviada a '+RETORNO,'ok',5000);
+    },function(err){
+      btn.disabled=false;btn.textContent='✉ Enviar Aprobación';
+      _toast('Error: '+JSON.stringify(err),'err',6000);
+    });
+  }).catch(function(err){
+    btn.disabled=false;btn.textContent='✉ Enviar Aprobación';
+    _toast('Error captura: '+err.message,'err',5000);
+  });
 }
 </script>
 </body>

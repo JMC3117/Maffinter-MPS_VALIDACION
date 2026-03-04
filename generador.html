@@ -86,7 +86,7 @@ textarea{resize:vertical;min-height:80px;line-height:1.5}
   </div>
   <div class="gen-title">
     <h1>Generador de Fichas</h1>
-    <p>Crea el enlace de aprobación para enviar al cirujano &nbsp;·&nbsp; <strong>Abre esta página desde Netlify</strong></p>
+    <p>Crea el enlace de aprobación para enviar al cirujano &nbsp;·&nbsp; <strong>Abre esta página desde tu hosting</strong></p>
   </div>
 
   <div class="gen-card">
@@ -209,7 +209,7 @@ function generarEnlace() {
   document.getElementById("error-box").classList.remove("show");
   document.getElementById("url-box").classList.remove("show");
   var baseURL=v("base-url").trim();
-  if(!baseURL){showError("Introduce la URL de tu Netlify.");return;}
+  if(!baseURL){showError("Introduce la URL de tu página.");return;}
   baseURL=baseURL.replace(/\/+$/,"").replace(/\/ficha\.html$/,"");
   if(!baseURL.startsWith("http"))baseURL="https://"+baseURL;
   var fichaURL=baseURL+"/ficha.html";
